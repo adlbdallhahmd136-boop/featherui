@@ -1,6 +1,6 @@
 /* ================================
    FeatherUI v2.0 - FULL ULTRA FANCY
-   50+ CLASS READY
+   50+ CLASS READY - DIMENSION FIXES
    ================================ */
 
 /* RESET */
@@ -38,14 +38,17 @@
 .f-btn-scale:hover{transform:scale(1.1);transition:.3s;}
 
 /* ====== CARDS ====== */
-.f-card{background:white;padding:20px;border-radius:var(--radius);box-shadow:0 2px 8px rgba(0,0,0,0.1);}
-.f-card-pro{background:linear-gradient(135deg,#6c5ce7,#00cec9);padding:25px;border-radius:var(--radius);position:relative;overflow:hidden;color:white;box-shadow:0 10px 25px rgba(0,0,0,0.2);transform:translateY(0);transition:0.35s ease;}
+/* تم تعديل الـ padding لجعله أفقي أكثر (15px رأسي, 20px أفقي) */
+.f-card{background:white;padding:15px 20px;border-radius:var(--radius);box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+/* تم تعديل الـ padding لجعله أفقي أكثر لزيادة الإحساس بالـ Premium (20px رأسي, 30px أفقي) */
+.f-card-pro{background:linear-gradient(135deg,#6c5ce7,#00cec9);padding:20px 30px;border-radius:var(--radius);position:relative;overflow:hidden;color:white;box-shadow:0 10px 25px rgba(0,0,0,0.2);transform:translateY(0);transition:0.35s ease;}
 .f-card-pro:hover{transform:translateY(-10px);box-shadow:0 18px 35px rgba(0,0,0,0.3);}
 .f-card-pro::after{content:"";position:absolute;width:120px;height:120px;background:rgba(255,255,255,0.15);top:-40px;right:-40px;border-radius:50%;transition:.3s;}
 .f-card-pro:hover::after{right:-20px;top:-20px;}
 .f-card-glass{background:rgba(255,255,255,0.15);backdrop-filter:blur(12px);border-radius:var(--radius);padding:20px;box-shadow:0 15px 35px rgba(0,0,0,0.3);}
 .f-card-neon{background:#111;border:2px solid #0ff;color:#0ff;padding:20px;border-radius:var(--radius);box-shadow:0 0 20px #0ff;}
-.f-card-gradient{background:linear-gradient(135deg,#6c5ce7,#00cec9);color:white;padding:25px;border-radius:var(--radius);box-shadow:0 15px 40px rgba(0,0,0,0.35);}
+/* تم تعديل الـ padding لجعله أفقي أكثر (20px رأسي, 25px أفقي) */
+.f-card-gradient{background:linear-gradient(135deg,#6c5ce7,#00cec9);color:white;padding:20px 25px;border-radius:var(--radius);box-shadow:0 15px 40px rgba(0,0,0,0.35);}
 .f-card-float{transform:translateY(0);transition:.4s;}
 .f-card-float:hover{transform:translateY(-15px);box-shadow:0 25px 70px rgba(0,0,0,0.45);}
 .f-card-pro-title{font-size:26px;font-weight:800;margin-bottom:10px;}
