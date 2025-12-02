@@ -1,0 +1,63 @@
+/* ================================
+   FeatherUI v1.0 - FULL
+   ================================ */
+
+/* RESET */
+* { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI", sans-serif; }
+
+/* VARIABLES */
+:root {
+  --primary:#6c5ce7; --secondary:#00cec9; --dark:#2d3436; --light:#f1f2f6; --radius:12px;
+}
+
+/* ====== CONTAINER ====== */
+.f-container { width:92%; margin:auto; max-width:1200px; }
+
+/* ====== GRID ====== */
+.f-row { display:flex; flex-wrap:wrap; gap:15px; }
+.f-col-1{flex:0 0 8.33%;} .f-col-2{flex:0 0 16.66%;} .f-col-3{flex:0 0 25%;}
+.f-col-4{flex:0 0 33.33%;} .f-col-5{flex:0 0 41.66%;} .f-col-6{flex:0 0 50%;}
+.f-col-7{flex:0 0 58.33%;} .f-col-8{flex:0 0 66.66%;} .f-col-9{flex:0 0 75%;}
+.f-col-10{flex:0 0 83.33%;} .f-col-11{flex:0 0 91.66%;} .f-col-12{flex:0 0 100%;}
+
+/* ====== BUTTONS ====== */
+.f-btn { padding:10px 18px; border-radius:var(--radius); border:none; cursor:pointer; transition:.2s; font-weight:600; display:inline-block; }
+.f-btn-primary{background:var(--primary);color:white;}
+.f-btn-primary:hover{opacity:.85;}
+.f-btn-outline{background:transparent;border:2px solid var(--primary);color:var(--primary);}
+.f-btn-outline:hover{background:var(--primary);color:white;}
+.f-btn-secondary{background:var(--secondary);color:white;}
+.f-btn-secondary:hover{opacity:.85;}
+.f-btn-dark{background:var(--dark);color:white;}
+.f-btn-light{background:var(--light);color:var(--dark);}
+
+/* ====== CARDS ====== */
+.f-card { background:white; padding:20px; border-radius:var(--radius); box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+.f-card-pro { background: linear-gradient(135deg,#6c5ce7,#00cec9); padding:25px; border-radius:var(--radius); position:relative; overflow:hidden; color:white; box-shadow:0 10px 25px rgba(0,0,0,0.2); transform:translateY(0); transition:0.35s ease; }
+.f-card-pro:hover { transform:translateY(-10px); box-shadow:0 18px 35px rgba(0,0,0,0.3);}
+.f-card-pro::after { content:""; position:absolute; width:120px; height:120px; background:rgba(255,255,255,0.15); top:-40px; right:-40px; border-radius:50%; transition:.3s; }
+.f-card-pro:hover::after { right:-20px; top:-20px; }
+.f-card-title { font-size:26px; font-weight:800; margin-bottom:10px; }
+.f-card-desc { opacity:.9; line-height:1.6; margin-bottom:18px; }
+
+/* ====== FORMS ====== */
+.f-form-group { margin-bottom:20px; }
+.f-form-label { font-weight:600; margin-bottom:6px; display:block; }
+.f-input { width:100%; padding:12px 15px; border-radius:var(--radius); border:2px solid #ddd; background:#fafafa; transition:.25s; font-size:15px; }
+.f-input:focus { border-color:var(--primary); background:white; box-shadow:0 0 8px rgba(108,92,231,0.4); outline:none; }
+.f-textarea { resize:none; height:130px; }
+.f-select { cursor:pointer; }
+
+/* ====== NAVBAR ====== */
+.f-navbar { width:100%; background:var(--dark); color:white; padding:12px 0; }
+.f-navbar .brand { font-size:20px; font-weight:bold; }
+.f-navbar .f-nav-links a { margin-left:20px; color:white; text-decoration:none; font-weight:500; }
+
+/* ====== UTILITIES ====== */
+.text-center{ text-align:center; } .mt-2{margin-top:10px;} .mt-3{margin-top:20px;} .mt-4{margin-top:35px;} .p-2{padding:10px;} .p-3{padding:20px;}
+.f-rounded{border-radius:var(--radius);}
+.f-shadow{box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+.f-animate-hover { transition:.35s; } .f-animate-hover:hover { transform:scale(1.05);}
+.f-bg-primary{background:var(--primary); color:white;} .f-bg-secondary{background:var(--secondary); color:white;}
+.f-bg-dark{background:var(--dark); color:white;} .f-bg-light{background:var(--light); color:var(--dark);}
+.f-text-primary{color:var(--primary);} .f-text-secondary{color:var(--secondary);} .f-text-dark{color:var(--dark);} .f-text-light{color:var(--light);}
