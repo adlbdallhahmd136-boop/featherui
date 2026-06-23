@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مشاهدة المحاضرة - مركز سيبويه</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif;font-weight:800}
+        body{background:#0a0a0a;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+        header{background:#1E4D5C;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:100;height:56px}
+        .back-btn{cursor:pointer;background:rgba(255,255,255,0.15);width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid rgba(255,255,255,0.2);flex-shrink:0}
+        .back-btn svg{width:18px;height:18px;fill:rgba(255,255,255,0.8)}
+        .center-title{font-weight:900;color:#C9A84C;font-size:20px}
+        .spacer{flex:1}
+        body::before{content:'';display:block;height:56px;flex-shrink:0}
+        .container{width:100%;max-width:900px;padding:16px;display:flex;flex-direction:column;gap:16px;margin-bottom:30px}
+        .video-wrapper{position:relative;width:100%;background:#000;border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.4)}
+        .video-wrapper iframe,.video-wrapper video{width:100%;height:auto;min-height:400px;aspect-ratio:16/9;border:none;display:block}
+        .loading{text-align:center;color:#fff;padding:40px;font-size:18px}
+        .error{color:#f87171;text-align:center;padding:40px;font-size:16px}
+
+        /* طبقة لمنع النقر على iframe يوتيوب (تخفي شريط القناة) */
+        .youtube-cover {
+            position: absolute; top:0; left:0; right:0; bottom:0;
+            z-index:9; background: transparent; pointer-events: auto;
+        }
+
+        /* شريط التحكم */
+        .video-controls-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 40px 16px 16px; display: flex; flex-direction: column; gap: 12px;
+            opacity: 0; transition: opacity 0.3s ease; z-index: 10;
+        }
+        .video-controls-overlay.visible { opacity: 1; }
+        .controls-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .controls-row.center { justify-content: center; }
+        .ctrl-btn {
+            background: rgba(255,255,255,0.12); border: none; color: #fff;
+            padding: 12px 16px; border-radius: 12px; cursor: pointer;
+            font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px;
+            transition: background 0.2s; white-space: nowrap; backdrop-filter: blur(6px);
+        }
+        .ctrl-btn:hover { background: rgba(255,255,255,0.25); }
+        .ctrl-btn svg { width: 18px; height: 18px; fill: #fff; }
+        .ctrl-btn.play-btn { padding: 14px 28px; font-size: 16px; background: rgba(201,168,76,0.25); }
+        .ctrl-btn.play-btn:hover { background: rgba(201,168,76,0.45); }
+        .time-display { color: #fff; font-size: 13px; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+        .speed-select {
+            background: rgba(255,255,255,0.12); border: none; color: #fff;
+            padding: 8px 12px; border-radius: 10px; font-weight: 700; font-size: 13px;
+            cursor: pointer; backdrop-filter: blur(6px); font-family: 'Cairo', sans-serif;
+        }
+        .speed-select option { background: #1a1a2e; color: #fff; }
+
+        /* شريط التقدم */
+        .seek-bar {
+            width: 100%; margin: 0; padding: 0; height: 6px;
+            -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.2);
+            border-radius: 3px; outline: none; cursor: pointer;
+        }
+        .seek-bar::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 16px; height: 16px;
+            background: #C9A84C; border-radius: 50%; cursor: pointer; border: 2px solid #fff;
+        }
+
+        /* عنوان المحاضرة والوصف (بدون كارد) */
+        .lecture-title {
+            font-size: 26px; font-weight: 900; color: #fff; text-align: right; margin-top: 8px; line-height: 1.4;
+        }
+        .lecture-desc {
+            font-size: 16px; font-weight: 500; color: #e2e8f0; text-align: right; line-height: 2; margin-top: 4px;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="back-btn" onclick="history.back()"><svg viewBox="0 0 448 512"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></div>
+        <div class="center-title">مركز سيبويه</div>
+        <div class="spacer"></div>
+    </header>
+
+    <div class="container" id="content"><div class="loading">جاري تحميل المحاضرة...</div></div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        const SUPABASE_URL = 'https://mxacecdlzckykkvdpzbz.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_-1TlYGF9ZprgRnTuS5UK1w_07BvRaBD';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let player = null, currentSpeed = 1, hideControlsTimer = null, isSeeking = false;
+
+        function getEmbedUrl(url) {
+            if (url.includes('youtube.com/watch?v=')) {
+                const videoId = url.split('v=')[1]?.split('&')[0];
+                return { type: 'youtube', id: videoId, embedUrl: `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=0&modestbranding=1&rel=0&showinfo=0` };
+            }
+            if (url.includes('youtu.be/')) {
+                const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+                return { type: 'youtube', id: videoId, embedUrl: `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=0&modestbranding=1&rel=0&showinfo=0` };
+            }
+            if (url.includes('youtube.com/embed/')) {
+                const videoId = url.split('embed/')[1]?.split('?')[0];
+                return { type: 'youtube', id: videoId, embedUrl: `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=0&modestbranding=1&rel=0&showinfo=0` };
+            }
+            return { type: 'direct', embedUrl: url };
+        }
+
+        function buildUI(lecture, videoInfo) {
+            const container = document.getElementById('content');
+            container.innerHTML = `
+                <div class="video-wrapper" id="videoContainer">
+                    ${videoInfo.type === 'youtube' ? `<div id="ytPlayer"></div><div class="youtube-cover"></div>` : `<video id="directVideo" src="${videoInfo.embedUrl}" controlsList="nodownload" style="width:100%"></video>`}
+                    <div class="video-controls-overlay" id="videoControls">
+                        <input type="range" id="seekBar" class="seek-bar" min="0" max="100" value="0" step="0.1" oninput="onSeekInput()" onchange="onSeekChange()" onmousedown="isSeeking=true" onmouseup="onSeekEnd()" ontouchstart="isSeeking=true" ontouchend="onSeekEnd()">
+                        <div class="controls-row center">
+                            <button class="ctrl-btn" onclick="skipBackward()"><svg viewBox="0 0 512 512"><path d="M48.5 224L40 224c-13.3 0-24-10.7-24-24L16 72c0-9.7 5.8-18.5 14.8-22.2s19.3-1.7 26.2 5.2L82.6 80.6c54.7-46.4 125.5-72.3 201.4-64C377 25.3 457.8 97.9 471.4 190.2c2.2 15.1-8.2 29-23.4 31.2s-29-8.2-31.2-23.4C404.8 109.8 334.2 50.6 260.4 56.8C199.5 62.1 146.4 91.4 112 139.2l39.3 39.3c6.9 6.9 8.9 17.2 5.2 26.2s-12.5 14.8-22.2 14.8L48.5 224zM464 256l0 0c13.3 0 24 10.7 24 24l0 128c0 9.7-5.8 18.5-14.8 22.2s-19.3 1.7-26.2-5.2L417.4 395.4C362.7 441.8 291.9 467.7 216 459.4C135 450.2 54.2 377.3 40.6 285c-2.2-15.1 8.2-29 23.4-31.2s29 8.2 31.2 23.4C107.2 402.2 177.8 461.4 251.6 455.2c60.9-5.3 114-34.6 148.4-82.4l-39.3-39.3c-6.9-6.9-8.9-17.2-5.2-26.2s12.5-14.8 22.2-14.8l85.9 0z"/></svg> -10</button>
+                            <button class="ctrl-btn play-btn" id="playPauseBtn" onclick="togglePlay()"><svg id="playIcon" viewBox="0 0 384 512"><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80L0 432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg> <span id="playText">تشغيل</span></button>
+                            <button class="ctrl-btn" onclick="skipForward()">+10 <svg viewBox="0 0 512 512"><path d="M463.5 224l8.5 0c13.3 0 24-10.7 24-24L496 72c0-9.7-5.8-18.5-14.8-22.2s-19.3-1.7-26.2 5.2L429.4 80.6C374.7 34.2 303.9 8.3 228 16.6C135 25.8 54.2 98.7 40.6 191c-2.2 15.1 8.2 29 23.4 31.2s29-8.2 31.2-23.4C107.2 109.8 177.8 50.6 251.6 56.8c60.9 5.3 114 34.6 148.4 82.4l-39.3 39.3c-6.9 6.9-8.9 17.2-5.2 26.2s12.5 14.8 22.2 14.8l85.9 0zM48 256l0 0c-13.3 0-24 10.7-24 24l0 128c0 9.7 5.8 18.5 14.8 22.2s19.3 1.7 26.2-5.2L94.6 395.4c54.7 46.4 125.5 72.3 201.4 64c92.7-8.5 173.5-81.5 187.1-173.8c2.2-15.1-8.2-29-23.4-31.2s-29 8.2-31.2 23.4C416.8 402.2 346.2 461.4 260.4 455.2c-60.9-5.3-114-34.6-148.4-82.4l39.3-39.3c6.9-6.9 8.9-17.2 5.2-26.2s-12.5-14.8-22.2-14.8L48 256z"/></svg></button>
+                        </div>
+                        <div class="controls-row">
+                            <span class="time-display" id="timeDisplay">0:00 / 0:00</span>
+                            <select class="speed-select" id="speedSelect" onchange="changeSpeed(this.value)"><option value="0.5">0.5x</option><option value="0.75">0.75x</option><option value="1" selected>1x</option><option value="1.25">1.25x</option><option value="1.5">1.5x</option><option value="2">2x</option></select>
+                            <button class="ctrl-btn" id="fullscreenBtn" onclick="toggleFullscreen()"><svg id="fullscreenIcon" viewBox="0 0 448 512"><path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"/></svg></button>
+                        </div>
+                    </div>
+                </div>
+                <h1 class="lecture-title">${lecture.title}</h1>
+                <p class="lecture-desc">${lecture.description || 'لا يوجد وصف لهذه المحاضرة'}</p>
+            `;
+
+            if (videoInfo.type === 'youtube') {
+                player = new YT.Player('ytPlayer', {
+                    videoId: videoInfo.id,
+                    playerVars: { controls: 0, modestbranding: 1, rel: 0, showinfo: 0 },
+                    events: { onReady: onPlayerReady, onStateChange: onPlayerStateChange }
+                });
+            } else {
+                const video = document.getElementById('directVideo');
+                video.addEventListener('timeupdate', updateTimeDisplayDirect);
+                video.addEventListener('play', () => updatePlayButton(true));
+                video.addEventListener('pause', () => updatePlayButton(false));
+                updatePlayButton(false);
+            }
+
+            if (videoInfo.type === 'youtube') setInterval(updateTimeDisplay, 1000);
+
+            document.addEventListener('fullscreenchange', updateFullscreenIcon);
+            document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+            document.addEventListener('msfullscreenchange', updateFullscreenIcon);
+
+            const videoContainer = document.getElementById('videoContainer');
+            const controls = document.getElementById('videoControls');
+            videoContainer.addEventListener('click', () => {
+                controls.classList.add('visible');
+                clearTimeout(hideControlsTimer);
+                hideControlsTimer = setTimeout(() => controls.classList.remove('visible'), 3000);
+            });
+            controls.classList.add('visible');
+            hideControlsTimer = setTimeout(() => controls.classList.remove('visible'), 3000);
+        }
+
+        function onPlayerReady(event) { updatePlayButton(false); updateTimeDisplay(); }
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) updatePlayButton(true);
+            else if (event.data === YT.PlayerState.PAUSED) updatePlayButton(false);
+        }
+
+        function updatePlayButton(isPlaying) {
+            const icon = document.getElementById('playIcon');
+            const text = document.getElementById('playText');
+            if (!icon || !text) return;
+            if (isPlaying) {
+                icon.innerHTML = '<path d="M48 64C21.5 64 0 85.5 0 112L0 400c0 26.5 21.5 48 48 48l32 0c26.5 0 48-21.5 48-48l0-288c0-26.5-21.5-48-48-48L48 64zm192 0c-26.5 0-48 21.5-48 48l0 288c0 26.5 21.5 48 48 48l32 0c26.5 0 48-21.5 48-48l0-288c0-26.5-21.5-48-48-48l-32 0z"/>';
+                text.textContent = 'إيقاف';
+            } else {
+                icon.innerHTML = '<path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80L0 432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/>';
+                text.textContent = 'تشغيل';
+            }
+        }
+
+        function togglePlay() {
+            if (player && player.getPlayerState) {
+                if (player.getPlayerState() === YT.PlayerState.PLAYING) player.pauseVideo();
+                else player.playVideo();
+            } else {
+                const video = document.getElementById('directVideo');
+                if (video) video.paused ? video.play() : video.pause();
+            }
+        }
+
+        function skipForward() {
+            if (player && player.getCurrentTime) player.seekTo(player.getCurrentTime() + 10, true);
+            else { const video = document.getElementById('directVideo'); if (video) video.currentTime += 10; }
+        }
+
+        function skipBackward() {
+            if (player && player.getCurrentTime) player.seekTo(Math.max(0, player.getCurrentTime() - 10), true);
+            else { const video = document.getElementById('directVideo'); if (video) video.currentTime = Math.max(0, video.currentTime - 10); }
+        }
+
+        function changeSpeed(val) {
+            currentSpeed = parseFloat(val);
+            if (player && player.setPlaybackRate) player.setPlaybackRate(currentSpeed);
+            else { const video = document.getElementById('directVideo'); if (video) video.playbackRate = currentSpeed; }
+        }
+
+        function onSeekInput() {
+            isSeeking = true;
+            const seekBar = document.getElementById('seekBar');
+            const time = parseFloat(seekBar.value);
+            if (player && player.seekTo) player.seekTo(time, true);
+            else { const video = document.getElementById('directVideo'); if (video) video.currentTime = time; }
+            document.getElementById('timeDisplay').textContent = formatTime(time) + ' / ' + formatTime(seekBar.max);
+        }
+
+        function onSeekChange() { isSeeking = false; }
+        function onSeekEnd() { isSeeking = false; }
+
+        function updateTimeDisplay() {
+            if (!player || !player.getCurrentTime || isSeeking) return;
+            const current = player.getCurrentTime() || 0, duration = player.getDuration() || 0;
+            const seekBar = document.getElementById('seekBar');
+            if (seekBar) { seekBar.max = duration; seekBar.value = current; }
+            document.getElementById('timeDisplay').textContent = formatTime(current) + ' / ' + formatTime(duration);
+        }
+
+        function updateTimeDisplayDirect() {
+            if (isSeeking) return;
+            const video = document.getElementById('directVideo'); if (!video) return;
+            const current = video.currentTime, duration = video.duration || 0;
+            const seekBar = document.getElementById('seekBar');
+            if (seekBar) { seekBar.max = duration; seekBar.value = current; }
+            document.getElementById('timeDisplay').textContent = formatTime(current) + ' / ' + formatTime(duration);
+        }
+
+        function updateFullscreenIcon() {
+            const icon = document.getElementById('fullscreenIcon');
+            if (!icon) return;
+            if (document.fullscreenElement) {
+                icon.innerHTML = '<path d="M64 64l0 32-32 0c-17.7 0-32 14.3-32 32l0 32c0 17.7 14.3 32 32 32l32 0 0 32c0 17.7 14.3 32 32 32l32 0c17.7 0 32-14.3 32-32l0-32 32 0c17.7 0 32-14.3 32-32l0-32c0-17.7-14.3-32-32-32l-32 0 0-32c0-17.7-14.3-32-32-32l-32 0zM416 64l0 32 32 0c17.7 0 32 14.3 32 32l0 32c0 17.7-14.3 32-32 32l-32 0 0 32c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32 14.3-32 32l0 32-32 0c-17.7 0-32 14.3-32 32l0 32c0 17.7 14.3 32 32 32l32 0z"/>';
+            } else {
+                icon.innerHTML = '<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"/>';
+            }
+        }
+
+        function toggleFullscreen() {
+            const videoContainer = document.getElementById('videoContainer');
+            if (!videoContainer) return;
+            if (!document.fullscreenElement) {
+                if (videoContainer.requestFullscreen) videoContainer.requestFullscreen();
+                else if (videoContainer.webkitRequestFullscreen) videoContainer.webkitRequestFullscreen();
+                else if (videoContainer.msRequestFullscreen) videoContainer.msRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
+            }
+        }
+
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return '0:00';
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        async function loadVideo() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            const container = document.getElementById('content');
+            if (!id) { container.innerHTML = '<div class="error">معرف المحاضرة غير موجود</div>'; return; }
+            const { data: lecture, error } = await sb.from('lectures').select('*').eq('id', id).single();
+            if (error || !lecture) { container.innerHTML = '<div class="error">المحاضرة غير موجودة</div>'; return; }
+            const videoInfo = getEmbedUrl(lecture.video_url);
+            buildUI(lecture, videoInfo);
+        }
+
+        window.addEventListener('DOMContentLoaded', loadVideo);
+    </script>
+</body>
+</html>
