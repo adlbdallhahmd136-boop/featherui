@@ -186,8 +186,88 @@
         else strengthEl.classList.add('strong');
     }
 
+    // ========== دالة توليد رمز جلسة فريد ==========
+    function generateToken() {
+        // يُنشئ رمزاً عشوائياً للجلسة
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    // ========== دالة إنشاء جلسة في Supabase ==========
+    async function createSession(userData) {
+        const token = generateToken();
+        const now = new Date();
+        // صلاحية الجلسة 30 يومًا
+        const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        
+        const { data, error } = await sb
+            .from('sessions')
+            .insert([{
+                user_id: userData.id,
+                token: token,
+                expires_at: expiresAt.toISOString(),
+                is_valid: true
+            }])
+            .select('token')
+            .single();
+
+        if (error) {
+            console.error('فشل في إنشاء الجلسة:', error);
+            return null;
+        }
+
+        // تخزين بيانات المستخدم ورمز الجلسة في المتصفح
+        localStorage.setItem('sibawayhUser', JSON.stringify(userData));
+        localStorage.setItem('sessionToken', data.token);
+        return data.token;
+    }
+
+    // ========== دالة التحقق من الجلسة الموجودة ==========
+    async function checkExistingSession() {
+        const savedUser = localStorage.getItem('sibawayhUser');
+        const savedToken = localStorage.getItem('sessionToken');
+
+        // لا توجد جلسة محفوظة، اعرض فورم تسجيل الدخول
+        if (!savedUser || !savedToken) {
+            return false;
+        }
+
+        try {
+            // التحقق من صلاحية الجلسة في Supabase
+            const now = new Date().toISOString();
+            const { data, error } = await sb
+                .from('sessions')
+                .select('*')
+                .eq('token', savedToken)
+                .eq('is_valid', true)
+                .gt('expires_at', now)
+                .single();
+
+            if (error || !data) {
+                // الجلسة غير صالحة، نظف البيانات المحفوظة
+                localStorage.removeItem('sibawayhUser');
+                localStorage.removeItem('sessionToken');
+                return false;
+            }
+
+            // جلسة صالحة → توجيه فوري للوحة التحكم
+            window.location.href = 'main.html';
+            return true;
+        } catch (e) {
+            console.error('خطأ في التحقق من الجلسة:', e);
+            return false;
+        }
+    }
+
     // ========== ربط الأحداث عند تحميل الصفحة ==========
-    window.addEventListener('load', function() {
+    window.addEventListener('load', async function() {
+        // ------ الفحص الذكي الأول: البحث عن جلسة صالحة ------
+        const hasValidSession = await checkExistingSession();
+        // إذا كان هناك جلسة صالحة، لن يكمل الكود هنا لأنه تم التوجيه لـ main.html
+        
+        // إذا لم توجد جلسة، يكمل تجهيز الصفحة بشكل طبيعي:
         document.getElementById('signupBtn').addEventListener('click', handleSignup);
         document.getElementById('loginBtn').addEventListener('click', handleLogin);
         document.getElementById('goToLogin').addEventListener('click', showLogin);
@@ -222,7 +302,6 @@
         msgEl.className = 'msg';
         msgEl.textContent = '';
 
-        // التحقق من البريد الإلكتروني
         if (!email) {
             msgEl.className = 'msg error';
             msgEl.textContent = 'البريد الإلكتروني مطلوب';
@@ -233,8 +312,6 @@
             msgEl.textContent = 'صيغة البريد الإلكتروني غير صحيحة';
             return;
         }
-
-        // التحقق من كلمة المرور
         if (!password) {
             msgEl.className = 'msg error';
             msgEl.textContent = 'كلمة المرور مطلوبة';
@@ -245,26 +322,20 @@
             msgEl.textContent = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
             return;
         }
-
-        // التحقق من تطابق كلمتي المرور
         if (password !== passwordConfirm) {
             msgEl.className = 'msg error';
             msgEl.textContent = 'كلمتا المرور غير متطابقتين';
             return;
         }
-
-        // التحقق من الاسم
         if (!fullName) {
             msgEl.className = 'msg error';
             msgEl.textContent = 'الاسم الكامل مطلوب';
             return;
         }
 
-        // تعطيل الزر لمنع التكرار
         btnEl.disabled = true;
         btnEl.textContent = 'جاري إنشاء الحساب...';
 
-        // التحقق من عدم وجود حساب بنفس البريد الإلكتروني
         const { data: existingUser, error: checkError } = await sb
             .from('sibawayh')
             .select('id')
@@ -279,7 +350,6 @@
             btnEl.textContent = 'إنشاء حساب';
             return;
         }
-
         if (existingUser) {
             msgEl.className = 'msg error';
             msgEl.textContent = 'هذا البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول.';
@@ -288,7 +358,6 @@
             return;
         }
 
-        // إنشاء الحساب الجديد
         const { error } = await sb
             .from('sibawayh')
             .insert([{ email, password, full_name: fullName, country, age, phone }]);
@@ -305,7 +374,6 @@
 
         msgEl.className = 'msg success';
         msgEl.textContent = 'تم إنشاء الحساب بنجاح! جاري تحويلك لتسجيل الدخول...';
-
         setTimeout(() => {
             showLogin();
             document.getElementById('loginEmail').value = email;
@@ -314,7 +382,7 @@
         }, 2000);
     }
 
-    // ========== تسجيل الدخول ==========
+    // ========== تسجيل الدخول (مُحدَّث لإنشاء جلسة) ==========
     async function handleLogin() {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
@@ -348,15 +416,22 @@
             msgEl.textContent = 'بيانات الدخول غير صحيحة';
             return;
         }
-
-        // فحص إذا كان الحساب محظوراً
         if (data.banned === true) {
             msgEl.className = 'msg error';
             msgEl.textContent = 'تم حظر حسابك من قبل الإدارة. يرجى التواصل للدعم.';
             return;
         }
 
-        localStorage.setItem('sibawayhUser', JSON.stringify(data));
+        // --- إنشاء الجلسة الذكية بعد تسجيل الدخول الناجح ---
+        const token = await createSession(data);
+        if (!token) {
+            msgEl.className = 'msg error';
+            msgEl.textContent = 'فشل في حفظ الجلسة. حاول مرة أخرى.';
+            return;
+        }
+        // --------------------------------------------
+
+        // توجيه المستخدم للوحة التحكم
         window.location.href = 'main.html';
     }
 </script>
