@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تفاصيل المحاضرة - مركز سيبويه</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Cairo', sans-serif; font-weight: 800; }
+        body { background: #FBF9F7; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        header {
+            background: #1E4D5C; padding: 14px 24px; display: flex; align-items: center;
+            justify-content: space-between; position: fixed; top:0; left:0; right:0; z-index:100; height:56px;
+        }
+        .back-btn { cursor: pointer; background: rgba(255,255,255,0.15); width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:1px solid rgba(255,255,255,0.2); }
+        .back-btn svg { width:18px; height:18px; fill: rgba(255,255,255,0.8); }
+        .center-title { font-weight:900; color:#C9A84C; font-size:20px; }
+        .spacer { flex:1; }
+        body::before { content: ''; display: block; height: 72px; flex-shrink: 0; }
+        .container { width: 100%; max-width: 650px; padding: 20px; display: flex; flex-direction: column; gap: 20px; margin-bottom: 40px; }
+        .banner { width: 100%; border-radius: 20px; object-fit: cover; max-height: 350px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        .title { font-size: 28px; font-weight: 900; color: #1e293b; }
+        .meta { display: flex; gap: 16px; color: #5a6b7a; font-size: 14px; flex-wrap: wrap; }
+        .status { font-size: 14px; font-weight: 800; padding: 6px 14px; border-radius: 20px; background: #e8f5e9; color: #2e7d32; width: fit-content; }
+        .status.paid { background: #fff3e0; color: #e65100; }
+        .description { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); line-height: 1.8; color: #1e293b; }
+        .enter-btn { background: #1E4D5C; color: #fff; padding: 14px; text-align: center; border-radius: 14px; font-weight: 700; cursor: pointer; text-decoration: none; display: block; }
+        .enter-btn:hover { background: #152e3a; }
+        .loading { text-align: center; color: #5a6b7a; padding: 40px; }
+        .error { color: #d32f2f; text-align: center; padding: 40px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="back-btn" onclick="history.back()"><svg viewBox="0 0 448 512"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></div>
+        <div class="center-title">مركز سيبويه</div>
+        <div class="spacer"></div>
+    </header>
+
+    <div class="container" id="content">
+        <div class="loading">جاري تحميل التفاصيل...</div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://mxacecdlzckykkvdpzbz.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_-1TlYGF9ZprgRnTuS5UK1w_07BvRaBD';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function loadDetail() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            const container = document.getElementById('content');
+            if (!id) { container.innerHTML = '<div class="error">معرف المحاضرة غير موجود</div>'; return; }
+
+            const { data: lecture, error } = await sb
+                .from('lectures')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error || !lecture) {
+                container.innerHTML = '<div class="error">المحاضرة غير موجودة</div>';
+                return;
+            }
+
+            const date = new Date(lecture.created_at);
+            const formattedDate = date.toLocaleDateString('ar-EG');
+            const formattedTime = date.toLocaleTimeString('ar-EG', { hour:'2-digit', minute:'2-digit' });
+
+            container.innerHTML = `
+                <img class="banner" src="${lecture.banner_url}" alt="${lecture.title}">
+                <div class="title">${lecture.title}</div>
+                <div class="meta">
+                    <span>📅 ${formattedDate}</span>
+                    <span>🕒 ${formattedTime}</span>
+                    <span>⏱️ ${lecture.duration || '--'} دقيقة</span>
+                </div>
+                <span class="status ${lecture.status === 'paid' ? 'paid' : ''}">${lecture.status === 'paid' ? 'مدفوع' : 'مجاني'}</span>
+                <div class="description">${lecture.description || 'لا يوجد وصف لهذه المحاضرة.'}</div>
+                <a href="video.html?id=${lecture.id}" class="enter-btn">دخول للمحاضرة</a>
+            `;
+        }
+
+        window.addEventListener('DOMContentLoaded', loadDetail);
+    </script>
+</body>
+</html>
