@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الحصة - مركز سيبويه</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+            background: #FBF9F7;
+            direction: rtl;
+        }
+        .header {
+            background: #1E4D5C;
+            padding: 20px 24px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .header h1 {
+            font-size: 30px;
+            font-weight: 900;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        .iframe-wrapper {
+            width: 100%;
+            height: calc(100vh - 76px); /* 76px ارتفاع الهيدر */
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .error-msg {
+            text-align: center;
+            padding: 60px 20px;
+            color: #d32f2f;
+            font-weight: 700;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 id="streamTitle">الحصة</h1>
+    </div>
+    <div id="content"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://mxacecdlzckykkvdpzbz.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_-1TlYGF9ZprgRnTuS5UK1w_07BvRaBD';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const params = new URLSearchParams(window.location.search);
+        const streamId = params.get('id');
+
+        async function loadStream() {
+            const contentDiv = document.getElementById('content');
+            if (!streamId) {
+                contentDiv.innerHTML = '<div class="error-msg">لا يوجد بث محدد</div>';
+                return;
+            }
+
+            const { data: stream, error } = await sb
+                .from('streams')
+                .select('*')
+                .eq('id', streamId)
+                .single();
+
+            if (error || !stream) {
+                contentDiv.innerHTML = '<div class="error-msg">البث غير موجود</div>';
+                return;
+            }
+
+            // تحديث العنوان
+            document.getElementById('streamTitle').textContent = stream.title;
+
+            // إنشاء إطار iframe لعرض البث
+            const iframe = document.createElement('iframe');
+            iframe.src = stream.stream_url;
+            iframe.allow = 'camera; microphone; fullscreen; display-capture';
+            iframe.title = stream.title;
+            contentDiv.innerHTML = ''; // مسح أي رسالة خطأ
+            contentDiv.appendChild(iframe);
+        }
+
+        window.addEventListener('DOMContentLoaded', loadStream);
+    </script>
+</body>
+</html>

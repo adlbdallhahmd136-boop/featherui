@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>طلب توثيق - مركز سيبويه</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      font-weight: 800;
+      background-color: #F8F6F3;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px 30px;
+    }
+
+    /* لودر دائري صغير */
+    #loader {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(30, 77, 92, 0.95);
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      opacity: 1;
+      transition: opacity 0.4s;
+    }
+    #loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .lds-dual-ring {
+      width: 30px;
+      height: 30px;
+      border: 4px solid rgba(201,168,76,0.3);
+      border-radius: 50%;
+      border-top-color: #C9A84C;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* المحتوى */
+    .main-content {
+      max-width: 560px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .header-logo {
+      text-align: center;
+      margin-bottom: -10px;
+    }
+    .header-logo img {
+      width: 120px;
+    }
+
+    .title {
+      font-size: 32px;
+      font-weight: 900;
+      text-align: center;
+      color: #1E4D5C;
+      line-height: 1.4;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 17px;
+      font-weight: 800;
+      color: #1E4D5C;
+      margin-bottom: 2px;
+      letter-spacing: 0.3px;
+    }
+
+    /* حقول سميكة وثقيلة */
+    input, textarea {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 17px;
+      font-weight: 800;
+      background: #FFFFFF;
+      border: 4px solid #1E4D5C;
+      border-radius: 14px;
+      color: #1e293b;
+      outline: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.04);
+    }
+
+    input:focus, textarea:focus {
+      border-color: #C9A84C;
+      box-shadow: 0 0 0 6px rgba(201,168,76,0.12), 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 110px;
+      font-family: 'Cairo', sans-serif;
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #94A3B8;
+      font-weight: 600;
+    }
+
+    .btn-submit {
+      padding: 18px;
+      font-size: 19px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #1E4D5C 0%, #266678 100%);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: 0.25s;
+      letter-spacing: 1px;
+      box-shadow: 0 10px 25px rgba(30,77,92,0.3);
+      margin-top: 14px;
+    }
+
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #163640 0%, #1d5260 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 32px rgba(30,77,92,0.4);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.97);
+    }
+
+    .error-msg {
+      display: none;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 800;
+      color: #b91c1c;
+      background: #fee2e2;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 5px;
+      border: 2px solid #fca5a5;
+    }
+
+    @media (max-width: 500px) {
+      body {
+        padding: 40px 20px;
+      }
+      .title {
+        font-size: 27px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- لودر دائري صغير -->
+  <div id="loader">
+    <div class="lds-dual-ring"></div>
+  </div>
+
+  <div class="main-content">
+    <div class="header-logo">
+      <img src="https://i.postimg.cc/jSyt9RmC/20260518-032804.png" alt="Logo">
+    </div>
+    <h1 class="title">طلب توثيق الطالب</h1>
+
+    <form id="verifyForm">
+      <div class="form-group">
+        <label for="full_name">الاسم الكامل *</label>
+        <input type="text" id="full_name" required placeholder="أدخل اسمك الكامل">
+      </div>
+      <div class="form-group">
+        <label for="email">البريد الإلكتروني *</label>
+        <input type="email" id="email" required placeholder="example@mail.com">
+      </div>
+      <div class="form-group">
+        <label for="phone">رقم الهاتف *</label>
+        <input type="tel" id="phone" required placeholder="+2010xxxxxxxx">
+      </div>
+      <div class="form-group">
+        <label for="age">السن *</label>
+        <input type="number" id="age" required placeholder="مثال: 22" min="1" max="100">
+      </div>
+      <div class="form-group">
+        <label for="reason">سبب الرغبة في التوثيق *</label>
+        <textarea id="reason" required placeholder="اكتب سبب رغبتك في التوثيق باختصار..."></textarea>
+      </div>
+      <button type="submit" class="btn-submit">إرسال الطلب</button>
+    </form>
+    <div class="error-msg" id="errorMsg">❌ حدث خطأ، حاول مرة أخرى.</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://mxacecdlzckykkvdpzbz.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_-1TlYGF9ZprgRnTuS5UK1w_07BvRaBD';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const form = document.getElementById('verifyForm');
+    const errorMsg = document.getElementById('errorMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.style.display = 'none';
+
+      const full_name = document.getElementById('full_name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const age = parseInt(document.getElementById('age').value.trim());
+      const reason = document.getElementById('reason').value.trim();
+
+      if (!full_name || !email || !phone || !age || !reason) {
+        errorMsg.textContent = '⚠️ من فضلك أكمل جميع الحقول.';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      const { error } = await sb
+        .from('verification_requests')
+        .insert([{ full_name, email, phone, age, reason }]);
+
+      if (error) {
+        console.error(error);
+        errorMsg.textContent = '❌ فشل في حفظ البيانات. حاول مجدداً.';
+        errorMsg.style.display = 'block';
+      } else {
+        form.reset();
+      }
+    });
+
+    // إخفاء اللودر بعد 2.5 ثانية
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loader').classList.add('hidden');
+      }, 2500);
+    });
+  </script>
+</body>
+</html>
